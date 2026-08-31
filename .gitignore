@@ -1,0 +1,28 @@
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build
+dist/
+build/
+
+# Cache
+.cache/
+*.cache
+
+# documentacion
+*.md
+*.txt
