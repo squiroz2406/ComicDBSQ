@@ -26,23 +26,23 @@ const API = (() => {
       throw new Error(`HTTP Error: ${response.status} - ${response.statusText}`);
     }
 
+    let data;
     try {
       const text = await response.text();
       console.log('Response text length:', text.length);
-
-      const data = JSON.parse(text);
-
-      // Comic Vine API usa "error":"OK" para indicar éxito
-      if (data.error && data.error !== 'OK') {
-        console.error('API Error:', data.error);
-        throw new Error(data.error);
-      }
-
-      return data;
+      data = JSON.parse(text);
     } catch (e) {
       console.error('Error parsing response:', e.message);
       throw new Error(`Error al procesar respuesta: ${e.message}`);
     }
+
+    // Comic Vine API usa "error":"OK" para indicar éxito
+    if (data.error && data.error !== 'OK') {
+      console.error('API Error:', data.error);
+      throw new Error(data.error);
+    }
+
+    return data;
   };
 
   return {
