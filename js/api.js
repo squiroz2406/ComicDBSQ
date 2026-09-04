@@ -52,7 +52,7 @@ const API = (() => {
           query: filters.query || '',
           filter: filters.filter || '',
           sort: 'date_added:desc',
-          limit: CONFIG.RESULTS_PER_PAGE,
+          limit: filters.limit || CONFIG.RESULTS_PER_PAGE,
           offset: filters.offset || 0,
         };
 

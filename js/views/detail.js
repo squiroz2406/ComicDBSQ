@@ -159,15 +159,19 @@ const DetailView = (() => {
     if (!html) return html;
 
     // PASO 1: Reemplazar TODOS los href de Comic Vine con javascript:void(0)
-    // Esto previene que el navegador intente cargar esas URLs
+    // Esto previene que el navegador intente cargar esas URLs.
+    // La API devuelve tanto links absolutos (https://comicvine.gamespot.com/...)
+    // como relativos (ej: "/x-men-by-gerry-duggan-1-vol-1/4000-910395/"), por
+    // eso el host es opcional acá: un href relativo sin convertir es resuelto
+    // por el navegador contra nuestro propio origen y termina en 404.
     let processed = html.replace(
-      /href="https:\/\/comicvine\.gamespot\.com\/[^"]*\/(\d+)-(\d+)\/?"/g,
+      /href="(?:https:\/\/comicvine\.gamespot\.com)?\/[^"]*\/(\d+)-(\d+)\/?"/g,
       'href="javascript:void(0)" data-comic-id="$1-$2"'
     );
 
     // PASO 2: Reemplazar también URLs sin comillas (si las hay)
     processed = processed.replace(
-      /href=https:\/\/comicvine\.gamespot\.com\/[^\s>]*\/(\d+)-(\d+)\/?(?=[\s>])/g,
+      /href=(?:https:\/\/comicvine\.gamespot\.com)?\/[^\s>]*\/(\d+)-(\d+)\/?(?=[\s>])/g,
       'href="javascript:void(0)" data-comic-id="$1-$2"'
     );
 

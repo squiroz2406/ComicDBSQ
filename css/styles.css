@@ -24,9 +24,22 @@ html {
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background-color: var(--primary-color);
   color: var(--text-color);
   line-height: 1.6;
+  background-color: var(--primary-color);
+  /* Overlay con el color de fondo del tema (se adapta solo a modo claro/oscuro
+     vía color-mix) para que el texto que no está dentro de una tarjeta
+     (títulos de página, etc.) siga siendo legible sobre la imagen. */
+  background-image:
+    linear-gradient(
+      color-mix(in srgb, var(--primary-color) 85%, transparent),
+      color-mix(in srgb, var(--primary-color) 85%, transparent)
+    ),
+    url("img/app-background.jpg");
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 #app {
@@ -79,6 +92,11 @@ header {
   list-style: none;
   display: none;
   gap: 1rem;
+}
+
+.nav-menu.open {
+  display: flex;
+  flex-direction: column;
 }
 
 .nav-link {
@@ -384,7 +402,9 @@ footer {
 
 .comic-image {
   width: 150px;
-  height: 150px;
+  /* Proporción ~2:3, similar a la de una tapa de cómic estándar, para que
+     la imagen llene el recuadro sin dejar márgenes vacíos a los costados. */
+  height: 220px;
   object-fit: cover;
   flex-shrink: 0;
   background-color: var(--primary-color);
@@ -410,7 +430,7 @@ footer {
   color: var(--text-muted);
   margin-bottom: 1rem;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -446,11 +466,16 @@ footer {
 }
 
 .detail-image {
-  width: 200px;
+  /* Ancho automático en base al alto: se ve la imagen completa (sin
+     recortar) y sin franjas vacías, porque el recuadro se ajusta al
+     ancho real que le corresponde a la imagen a esa altura. */
+  width: auto;
+  max-width: 200px;
   height: 300px;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 4px;
   flex-shrink: 0;
+  background-color: var(--primary-color);
 }
 
 .detail-info {
@@ -825,7 +850,7 @@ footer {
   }
 
   .detail-image {
-    width: 250px;
+    max-width: 250px;
     height: 350px;
   }
 
@@ -849,7 +874,7 @@ footer {
   }
 
   .detail-image {
-    width: 300px;
+    max-width: 300px;
     height: 400px;
   }
 

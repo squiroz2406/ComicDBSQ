@@ -1,4 +1,10 @@
 const SearchView = (() => {
+  // La API de Comic Vine ignora el parámetro "offset" en el endpoint /search/
+  // (siempre devuelve desde la posición 0, sin importar el offset solicitado).
+  // Por eso se trae un único lote grande (el máximo permitido) y se pagina
+  // del lado del cliente en vez de pedir una "página" nueva por cada click.
+  const SEARCH_BATCH_SIZE = 100;
+
   let currentPage = 0;
   let currentFilters = {};
   let currentResults = { results: [] };
@@ -141,12 +147,8 @@ const SearchView = (() => {
       return;
     }
 
-    currentFilters = {
-      query,
-      type,
-      sort,
-      offset: currentPage * CONFIG.RESULTS_PER_PAGE,
-    };
+    currentFilters = { query, type, sort };
+    currentPage = 0;
 
     grid.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
 
@@ -158,9 +160,12 @@ const SearchView = (() => {
       }
 
       console.log('Searching for:', Security.sanitizeHTML(query));
+      // Se trae un único lote grande; la paginación posterior se resuelve
+      // en el cliente (ver comentario sobre SEARCH_BATCH_SIZE).
       const data = await API.searchComics({
         query,
-        offset: currentFilters.offset,
+        offset: 0,
+        limit: SEARCH_BATCH_SIZE,
       });
 
       console.log('Search results received');
@@ -192,10 +197,16 @@ const SearchView = (() => {
       return;
     }
 
-    const results = currentResults.results;
-    const total = currentResults.number_of_total_results || results.length;
+    // currentResults.results contiene el lote completo ya traído (hasta
+    // SEARCH_BATCH_SIZE). La página a mostrar se recorta acá, en el cliente.
+    const allResults = currentResults.results;
+    const navigableTotal = allResults.length;
+    const reportedTotal = currentResults.number_of_total_results || navigableTotal;
 
-    infoDiv.innerHTML = `<span class="results-count">Mostrando ${(currentPage * CONFIG.RESULTS_PER_PAGE) + 1}-${Math.min((currentPage + 1) * CONFIG.RESULTS_PER_PAGE, total)} de ${total} resultados</span>`;
+    const pageStart = currentPage * CONFIG.RESULTS_PER_PAGE;
+    const results = allResults.slice(pageStart, pageStart + CONFIG.RESULTS_PER_PAGE);
+
+    infoDiv.innerHTML = `<span class="results-count">Mostrando ${pageStart + 1}-${Math.min(pageStart + CONFIG.RESULTS_PER_PAGE, navigableTotal)} de ${reportedTotal} resultados</span>`;
 
     // Filtrar resultados inválidos (sin nombre ni descripción)
     const validResults = results.filter(item => {
@@ -236,11 +247,14 @@ const SearchView = (() => {
       const imageUrl = getProxiedImageUrl(rawImageUrl);
 
       // Manejo flexible de descripción
+      // Las descripciones de la API vienen en HTML (<h4>, <ul><li>...); hay
+      // que pasarlas a texto plano ANTES de truncar, si no el recorte corta
+      // etiquetas a la mitad y rompe el line-clamp de la tarjeta.
       let description = '';
       if (item.description) {
-        description = item.description.substring(0, 150) + '...';
+        description = Security.stripHTML(item.description).trim();
       } else if (item.bio) {
-        description = item.bio.substring(0, 150) + '...';
+        description = Security.stripHTML(item.bio).trim();
       } else if (item.aliases) {
         description = 'Alias: ' + item.aliases.split('\n')[0];
       } else if (item.country) {
@@ -248,6 +262,11 @@ const SearchView = (() => {
       } else {
         description = 'Sin descripción disponible';
       }
+
+      if (description.length > 150) {
+        description = description.substring(0, 150).trim() + '...';
+      }
+      description = Security.sanitizeHTML(description);
 
       const title = item.title || item.name || 'Sin título';
       const subtitle = item.publisher?.name || item.volume?.name || '';
@@ -299,21 +318,28 @@ const SearchView = (() => {
       }
     });
 
-    if (total > CONFIG.RESULTS_PER_PAGE) {
-      renderPagination(total, paginationDiv);
+    if (navigableTotal > CONFIG.RESULTS_PER_PAGE) {
+      renderPagination(navigableTotal, paginationDiv);
     }
   };
 
-  const renderPagination = (total, container) => {
-    const totalPages = Math.ceil(total / CONFIG.RESULTS_PER_PAGE);
+  // Cambia de página sobre el lote ya cargado en memoria: no vuelve a
+  // llamar a la API (ver SEARCH_BATCH_SIZE).
+  const goToPage = (page) => {
+    currentPage = page;
+    displayResults();
+    saveSearchState();
+  };
+
+  const renderPagination = (navigableTotal, container) => {
+    const totalPages = Math.ceil(navigableTotal / CONFIG.RESULTS_PER_PAGE);
 
     const prevBtn = document.createElement('button');
     prevBtn.textContent = 'Anterior';
     prevBtn.disabled = currentPage === 0;
-    prevBtn.onclick = async () => {
+    prevBtn.onclick = () => {
       if (currentPage > 0) {
-        currentPage--;
-        await performSearch();
+        goToPage(currentPage - 1);
       }
     };
     container.appendChild(prevBtn);
@@ -322,9 +348,8 @@ const SearchView = (() => {
       const btn = document.createElement('button');
       btn.textContent = i + 1;
       btn.className = i === currentPage ? 'active' : '';
-      btn.onclick = async () => {
-        currentPage = i;
-        await performSearch();
+      btn.onclick = () => {
+        goToPage(i);
       };
       container.appendChild(btn);
     }
@@ -332,10 +357,9 @@ const SearchView = (() => {
     const nextBtn = document.createElement('button');
     nextBtn.textContent = 'Siguiente';
     nextBtn.disabled = currentPage >= totalPages - 1;
-    nextBtn.onclick = async () => {
+    nextBtn.onclick = () => {
       if (currentPage < totalPages - 1) {
-        currentPage++;
-        await performSearch();
+        goToPage(currentPage + 1);
       }
     };
     container.appendChild(nextBtn);

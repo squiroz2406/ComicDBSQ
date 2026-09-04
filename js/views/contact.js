@@ -1,5 +1,5 @@
 const ContactView = (() => {
-  const render = () => {
+  const render = async () => {
     const content = document.getElementById('content');
     content.innerHTML = '';
 

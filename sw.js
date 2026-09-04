@@ -3,6 +3,7 @@ const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/css/styles.css',
+  '/css/img/app-background.jpg',
   '/js/config.js',
   '/js/api.js',
   '/js/storage.js',

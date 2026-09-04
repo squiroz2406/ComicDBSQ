@@ -50,13 +50,25 @@ const HomeView = (() => {
         featuredGrid.innerHTML = comics.map(comic => {
           const rawImageUrl = comic.image?.small_url || comic.image?.medium_url || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 150 150%22%3E%3Crect fill=%22%23333%22 width=%22150%22 height=%22150%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2216%22 fill=%22%23999%22 text-anchor=%22middle%22 dominant-baseline=%22central%22%3ENo Image%3C/text%3E%3C/svg%3E';
           const imageUrl = getProxiedImageUrl(rawImageUrl);
+
+          // La descripción de la API viene en HTML (<h4>, <ul><li>...); se
+          // limpia a texto plano antes de truncar para no romper el
+          // line-clamp de la tarjeta con etiquetas cortadas a la mitad.
+          let description = 'Sin descripción';
+          if (comic.description) {
+            description = Security.stripHTML(comic.description).trim();
+            if (description.length > 100) {
+              description = description.substring(0, 100).trim() + '...';
+            }
+          }
+
           return `
             <div class="comic-card" onclick="Router.navigate('/detail', { id: '${comic.id}', type: 'issue' })">
               <img src="${imageUrl}" alt="${comic.title || comic.name}" class="comic-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 150 150%22%3E%3Crect fill=%22%23333%22 width=%22150%22 height=%22150%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2214%22 fill=%22%23999%22 text-anchor=%22middle%22 dominant-baseline=%22central%22%3E?%3C/text%3E%3C/svg%3E'">
               <div class="comic-info">
                 <div>
                   <h3 class="comic-title">${comic.title || comic.name || 'Sin título'}</h3>
-                  <p class="comic-description">${comic.description ? comic.description.substring(0, 100) + '...' : 'Sin descripción'}</p>
+                  <p class="comic-description">${Security.sanitizeHTML(description)}</p>
                 </div>
                 <div class="comic-meta">
                   ${comic.cover_date ? `<span class="meta-item">📅 ${comic.cover_date}</span>` : ''}

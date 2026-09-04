@@ -9,6 +9,17 @@ const Security = (() => {
     return element.innerHTML;
   };
 
+  // Quitar etiquetas HTML y quedarse solo con el texto (para previews cortas:
+  // la API devuelve descripciones con <h4>/<ul>/<li>, que rotas a medias por
+  // un substring() rompen el layout de las tarjetas)
+  const stripHTML = (html) => {
+    if (!html) return '';
+
+    const element = document.createElement('div');
+    element.innerHTML = html;
+    return element.textContent || '';
+  };
+
   // Validar email
   const validateEmail = (email) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -137,6 +148,7 @@ const Security = (() => {
 
   return {
     sanitizeHTML,
+    stripHTML,
     validateEmail,
     validateNumber,
     validateLength,

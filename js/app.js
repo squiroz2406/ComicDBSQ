@@ -51,13 +51,13 @@ const App = (() => {
     if (menuToggle && navMenu) {
       menuToggle.addEventListener('click', () => {
         menuToggle.classList.toggle('active');
-        navMenu.style.display = navMenu.style.display === 'flex' ? 'none' : 'flex';
+        navMenu.classList.toggle('open');
       });
 
       document.querySelectorAll('.nav-link').forEach(link => {
         link.addEventListener('click', () => {
           menuToggle.classList.remove('active');
-          navMenu.style.display = 'none';
+          navMenu.classList.remove('open');
         });
       });
     }
