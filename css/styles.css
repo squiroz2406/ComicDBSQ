@@ -64,9 +64,9 @@ header {
 .nav-container {
   max-width: 1400px;
   margin: 0 auto;
-  /* Sin padding vertical: el logo (el elemento más alto) define el alto
-     de la navbar y llega justo hasta los bordes superior e inferior. */
-  padding: 0 1rem;
+  /* 6px arriba/abajo: con el logo en 68px, la navbar queda en 80px total,
+     dejándole un margen visible en vez de tocar los bordes. */
+  padding: 6px 1rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -84,7 +84,7 @@ header {
 
 .logo-img {
   display: block;
-  height: 80px;
+  height: 68px;
   width: auto;
   filter: drop-shadow(1px 2px 2px rgba(0, 0, 0, 0.4));
 }
