@@ -101,6 +101,20 @@ const API = (() => {
       }
     },
 
+    getStoryArcDetail: async (id) => {
+      try {
+        const url = buildUrl(`/story_arc/4045-${id}/`);
+        const response = await fetch(url);
+        const data = await handleResponse(response);
+
+        // API devuelve en "results" para endpoints individuales
+        return data.results || data;
+      } catch (error) {
+        console.error('Error fetching story arc detail:', error);
+        throw error;
+      }
+    },
+
     getCharacterDetail: async (id) => {
       try {
         const url = buildUrl(`/character/4005-${id}/`);
@@ -111,6 +125,20 @@ const API = (() => {
         return data.results || data;
       } catch (error) {
         console.error('Error fetching character detail:', error);
+        throw error;
+      }
+    },
+
+    getTeamDetail: async (id) => {
+      try {
+        const url = buildUrl(`/team/4060-${id}/`);
+        const response = await fetch(url);
+        const data = await handleResponse(response);
+
+        // API devuelve en "results" para endpoints individuales
+        return data.results || data;
+      } catch (error) {
+        console.error('Error fetching team detail:', error);
         throw error;
       }
     },

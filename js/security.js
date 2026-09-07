@@ -11,13 +11,20 @@ const Security = (() => {
 
   // Quitar etiquetas HTML y quedarse solo con el texto (para previews cortas:
   // la API devuelve descripciones con <h4>/<ul>/<li>, que rotas a medias por
-  // un substring() rompen el layout de las tarjetas)
+  // un substring() rompen el layout de las tarjetas).
+  // Antes de sacar las etiquetas hay que insertar un espacio en cada cierre
+  // de bloque: si no, textContent pega las palabras de elementos separados
+  // (ej: "<h4>Current Roster</h4><li>Cyclops</li>" -> "Current RosterCyclops").
   const stripHTML = (html) => {
     if (!html) return '';
 
+    const withSpaces = html
+      .replace(/<\/(p|div|li|h[1-6]|tr|ul|ol)\s*>/gi, '$& ')
+      .replace(/<br\s*\/?>/gi, ' ');
+
     const element = document.createElement('div');
-    element.innerHTML = html;
-    return element.textContent || '';
+    element.innerHTML = withSpaces;
+    return (element.textContent || '').replace(/\s+/g, ' ').trim();
   };
 
   // Validar email

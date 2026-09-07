@@ -31,12 +31,21 @@ const HistoryView = (() => {
         itemEl.className = 'list-item';
 
         const visitedDate = new Date(item.visitedAt).toLocaleString();
+        const typeLabels = {
+          issue: 'Cómic',
+          volume: 'Volumen',
+          character: 'Personaje',
+          person: 'Persona',
+          team: 'Equipo',
+          story_arc: 'Saga',
+        };
+        const typeLabel = typeLabels[item.type] || 'Personaje';
 
         itemEl.innerHTML = `
           <div class="list-item-content">
             <div class="list-item-title">${item.title}</div>
             <div class="list-item-meta">
-              <span>Tipo: <strong>${item.type === 'issue' ? 'Cómic' : item.type === 'volume' ? 'Volumen' : 'Personaje'}</strong></span> |
+              <span>Tipo: <strong>${typeLabel}</strong></span> |
               <span>Visitado: ${visitedDate}</span>
             </div>
           </div>

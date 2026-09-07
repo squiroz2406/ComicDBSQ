@@ -15,13 +15,20 @@ const DetailView = (() => {
 
   // Procesar TODOS los links de Comic Vine después de insertar en DOM
   const processAllComicVineLinks = (container) => {
+    // Comic Vine enlaza en sus descripciones a muchos más tipos de recurso
+    // de los que esta app puede mostrar (concept, location, object,
+    // publisher...). Para los que no reconocemos, null: mejor dejar el
+    // link como texto simple que navegar y mostrar información de otro
+    // ítem distinto (lo que pasaba antes, por ej. con story arcs).
     const getTypeByPrefix = (prefix) => {
       const prefixNum = parseInt(prefix);
       if (prefixNum === 4000) return 'issue';
       if (prefixNum === 4005) return 'character';
       if (prefixNum === 4050) return 'volume';
       if (prefixNum === 4040) return 'person';
-      return 'issue';
+      if (prefixNum === 4060) return 'team';
+      if (prefixNum === 4045) return 'story_arc';
+      return null;
     };
 
     const createFallbackImage = () => 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 150 150%22%3E%3Crect fill=%22%23333%22 width=%22150%22 height=%22150%22/%3E%3C/svg%3E';
@@ -32,6 +39,13 @@ const DetailView = (() => {
       if (comicId) {
         const [prefix, id] = comicId.split('-');
         const itemType = getTypeByPrefix(prefix);
+
+        if (!itemType) {
+          // Tipo de recurso no soportado: dejarlo como texto plano en vez
+          // de un link que navegaría a información incorrecta.
+          link.replaceWith(document.createTextNode(link.textContent));
+          return;
+        }
 
         link.onclick = (e) => {
           e.preventDefault();
@@ -109,12 +123,16 @@ const DetailView = (() => {
             item = await API.getCharacterDetail(id);
           } else if (type === 'person') {
             item = await API.getPersonDetail(id);
+          } else if (type === 'team') {
+            item = await API.getTeamDetail(id);
+          } else if (type === 'story_arc') {
+            item = await API.getStoryArcDetail(id);
           }
         } catch (primaryError) {
           // Si falla el tipo especificado, intentar otros tipos
           console.warn(`Fallo obtener ${type}, intentando otros tipos...`);
 
-          const tipos = ['character', 'person', 'issue', 'volume'].filter(t => t !== type);
+          const tipos = ['character', 'person', 'team', 'story_arc', 'issue', 'volume'].filter(t => t !== type);
 
           for (const altType of tipos) {
             try {
@@ -130,6 +148,12 @@ const DetailView = (() => {
               } else if (altType === 'person') {
                 item = await API.getPersonDetail(id);
                 finalType = 'person';
+              } else if (altType === 'team') {
+                item = await API.getTeamDetail(id);
+                finalType = 'team';
+              } else if (altType === 'story_arc') {
+                item = await API.getStoryArcDetail(id);
+                finalType = 'story_arc';
               }
 
               if (item) break; // Si obtuvimos algo, salir del loop
@@ -325,6 +349,56 @@ const DetailView = (() => {
           <div class="meta-field">
             <span class="meta-label">Apariciones</span>
             <span class="meta-value">${item.count_of_isssue_appearances}</span>
+          </div>
+        `;
+      }
+    } else if (type === 'team') {
+      if (item.publisher) {
+        detailHTML += `
+          <div class="meta-field">
+            <span class="meta-label">Editorial</span>
+            <span class="meta-value">${item.publisher.name}</span>
+          </div>
+        `;
+      }
+      if (item.count_of_team_members) {
+        detailHTML += `
+          <div class="meta-field">
+            <span class="meta-label">Miembros</span>
+            <span class="meta-value">${item.count_of_team_members}</span>
+          </div>
+        `;
+      }
+      if (item.first_appeared_in_issue) {
+        detailHTML += `
+          <div class="meta-field">
+            <span class="meta-label">Primera aparición</span>
+            <span class="meta-value">${item.first_appeared_in_issue.name}${item.first_appeared_in_issue.issue_number ? ' #' + item.first_appeared_in_issue.issue_number : ''}</span>
+          </div>
+        `;
+      }
+    } else if (type === 'story_arc') {
+      if (item.publisher) {
+        detailHTML += `
+          <div class="meta-field">
+            <span class="meta-label">Editorial</span>
+            <span class="meta-value">${item.publisher.name}</span>
+          </div>
+        `;
+      }
+      if (item.issues) {
+        detailHTML += `
+          <div class="meta-field">
+            <span class="meta-label">Cantidad de issues</span>
+            <span class="meta-value">${item.issues.length}</span>
+          </div>
+        `;
+      }
+      if (item.first_appeared_in_issue) {
+        detailHTML += `
+          <div class="meta-field">
+            <span class="meta-label">Primera aparición</span>
+            <span class="meta-value">${item.first_appeared_in_issue.name}${item.first_appeared_in_issue.issue_number ? ' #' + item.first_appeared_in_issue.issue_number : ''}</span>
           </div>
         `;
       }

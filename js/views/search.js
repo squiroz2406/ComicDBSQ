@@ -220,9 +220,13 @@ const SearchView = (() => {
       card.className = 'comic-card';
       card.style.cursor = 'pointer';
 
-      // MEJOR: Extraer tipo del api_detail_url de Comic Vine (mucho más confiable)
+      // Determinar el tipo de recurso. La API ya lo informa en "resource_type"
+      // (issue/volume/character/person/team/...), que es más confiable que
+      // adivinarlo por el prefijo numérico del ID; ese prefijo queda como
+      // respaldo para cuando no venga ese campo.
       let itemType = 'issue';
       let fullId = `4000-${item.id}`; // Formato por defecto
+      const knownResourceTypes = ['issue', 'volume', 'character', 'person', 'team', 'story_arc'];
 
       if (item.api_detail_url) {
         // URL es como: https://comicvine.gamespot.com/api/volume/4050-3173/
@@ -233,11 +237,17 @@ const SearchView = (() => {
         if (idSegment && idSegment.includes('-')) {
           fullId = idSegment; // Usar el ID completo del api_detail_url
 
-          const prefix = idSegment.split('-')[0];
-          if (prefix === '4050') itemType = 'volume';
-          else if (prefix === '4005') itemType = 'character';
-          else if (prefix === '4040') itemType = 'person';
-          else itemType = 'issue';
+          if (knownResourceTypes.includes(item.resource_type)) {
+            itemType = item.resource_type;
+          } else {
+            const prefix = idSegment.split('-')[0];
+            if (prefix === '4050') itemType = 'volume';
+            else if (prefix === '4005') itemType = 'character';
+            else if (prefix === '4040') itemType = 'person';
+            else if (prefix === '4060') itemType = 'team';
+            else if (prefix === '4045') itemType = 'story_arc';
+            else itemType = 'issue';
+          }
         }
       }
 
@@ -276,7 +286,9 @@ const SearchView = (() => {
         'person': '👤 Persona',
         'character': '🦸 Personaje',
         'issue': '📖 Cómic',
-        'volume': '📚 Volumen'
+        'volume': '📚 Volumen',
+        'team': '🛡️ Equipo',
+        'story_arc': '⚡ Saga'
       }[itemType] || itemType;
 
       card.innerHTML = `

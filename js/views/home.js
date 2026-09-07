@@ -19,7 +19,7 @@ const HomeView = (() => {
 
     view.innerHTML = `
       <section class="hero">
-        <h1>ComicDB</h1>
+        <img src="css/img/logo-hero.png" alt="ComicsDBSQ" class="hero-logo">
         <p>Tu base de datos interactiva de cómics</p>
         <p style="font-size: 0.95rem; margin-bottom: 1.5rem;">Explora, busca y organiza tu colección favorita de cómics</p>
         <a href="#/search" class="cta-button">Comenzar búsqueda</a>
@@ -62,8 +62,38 @@ const HomeView = (() => {
             }
           }
 
+          // La respuesta de /search/ mezcla issues, volúmenes, personajes y
+          // equipos; el tipo real viene en "resource_type", con el ID
+          // completo (prefijo-id) en api_detail_url como respaldo. Navegar
+          // siempre como 'issue' llevaba a un detalle equivocado cuando el
+          // resultado destacado no era un cómic (ver también search.js).
+          const knownResourceTypes = ['issue', 'volume', 'character', 'person', 'team', 'story_arc'];
+          let itemType = 'issue';
+          let fullId = `4000-${comic.id}`;
+
+          if (comic.api_detail_url) {
+            const urlParts = comic.api_detail_url.split('/');
+            const idSegment = urlParts[urlParts.length - 1] || urlParts[urlParts.length - 2];
+
+            if (idSegment && idSegment.includes('-')) {
+              fullId = idSegment;
+
+              if (knownResourceTypes.includes(comic.resource_type)) {
+                itemType = comic.resource_type;
+              } else {
+                const prefix = idSegment.split('-')[0];
+                if (prefix === '4050') itemType = 'volume';
+                else if (prefix === '4005') itemType = 'character';
+                else if (prefix === '4040') itemType = 'person';
+                else if (prefix === '4060') itemType = 'team';
+                else if (prefix === '4045') itemType = 'story_arc';
+                else itemType = 'issue';
+              }
+            }
+          }
+
           return `
-            <div class="comic-card" onclick="Router.navigate('/detail', { id: '${comic.id}', type: 'issue' })">
+            <div class="comic-card" onclick="Router.navigate('/detail', { id: '${fullId}', type: '${itemType}' })">
               <img src="${imageUrl}" alt="${comic.title || comic.name}" class="comic-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 150 150%22%3E%3Crect fill=%22%23333%22 width=%22150%22 height=%22150%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2214%22 fill=%22%23999%22 text-anchor=%22middle%22 dominant-baseline=%22central%22%3E?%3C/text%3E%3C/svg%3E'">
               <div class="comic-info">
                 <div>
