@@ -51,6 +51,13 @@ const API = (() => {
         const params = {
           query: filters.query || '',
           filter: filters.filter || '',
+          // Restringe el/los tipo(s) de recurso que devuelve la búsqueda
+          // global (issue, volume, character, team, person...).
+          resources: filters.resources || '',
+          // El endpoint /search/ ignora este parámetro (verificado contra la
+          // API real: el orden no cambia sin importar el valor). El orden
+          // que elige el usuario se aplica del lado del cliente en
+          // search.js, sobre el lote ya descargado.
           sort: 'date_added:desc',
           limit: filters.limit || CONFIG.RESULTS_PER_PAGE,
           offset: filters.offset || 0,

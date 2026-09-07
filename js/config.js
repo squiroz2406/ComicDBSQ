@@ -11,7 +11,7 @@ let CONFIG = {
     HISTORY: 'comicdb_history',
   },
   // Valores por defecto (se sobrescriben desde servidor)
-  RESULTS_PER_PAGE: 10,
+  RESULTS_PER_PAGE: 12,
   MAP_CENTER: [-34.9215, -57.9536],
   MAP_ZOOM: 15,
 };

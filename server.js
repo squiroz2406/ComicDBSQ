@@ -110,7 +110,7 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify({
       appName: ENV.APP_NAME || 'ComicDB',
       appVersion: ENV.APP_VERSION || '1.0.0',
-      resultsPerPage: parseInt(ENV.RESULTS_PER_PAGE) || 10,
+      resultsPerPage: parseInt(ENV.RESULTS_PER_PAGE) || 12,
       mapCenter: [
         parseFloat(ENV.MAP_LAT) || -34.9215,
         parseFloat(ENV.MAP_LNG) || -57.9536
