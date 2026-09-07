@@ -550,6 +550,10 @@ const DetailView = (() => {
     `;
 
     document.body.appendChild(modal);
+    // Al crearlo por primera vez hay que abrirlo ya mismo: si no, el
+    // primer click en "Agregar a lista de deseos" no mostraba nada (el
+    // modal quedaba armado pero oculto hasta un segundo click).
+    modal.classList.add('active');
 
     const form = modal.querySelector('form');
     form.addEventListener('submit', (e) => {
