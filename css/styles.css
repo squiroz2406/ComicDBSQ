@@ -394,9 +394,13 @@ footer {
 
 .comic-image {
   width: 150px;
-  /* Proporción ~2:3, similar a la de una tapa de cómic estándar, para que
-     la imagen llene el recuadro sin dejar márgenes vacíos a los costados. */
-  height: 220px;
+  /* Sin alto fijo: se estira con align-self para llenar toda la altura de
+     la tarjeta. Las tarjetas de una misma fila del grid quedan todas con
+     el alto de la más alta (la de descripción más larga); con un alto
+     fijo acá, las tarjetas más cortas dejaban un margen vacío debajo de
+     la imagen. object-fit sigue recortando para que nunca se deforme. */
+  align-self: stretch;
+  min-height: 220px;
   object-fit: cover;
   flex-shrink: 0;
   background-color: var(--primary-color);

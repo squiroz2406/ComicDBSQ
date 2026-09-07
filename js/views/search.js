@@ -399,7 +399,16 @@ const SearchView = (() => {
     };
     container.appendChild(prevBtn);
 
-    for (let i = 0; i < Math.min(totalPages, 5); i++) {
+    // Ventana deslizante de hasta 5 botones numerados, centrada en la
+    // página actual, para poder llegar a cualquier página (antes siempre
+    // mostraba fijo 1-5 sin importar en qué página se estuviera).
+    const MAX_PAGE_BUTTONS = 5;
+    const half = Math.floor(MAX_PAGE_BUTTONS / 2);
+    let windowStart = Math.max(0, currentPage - half);
+    const windowEnd = Math.min(totalPages, windowStart + MAX_PAGE_BUTTONS);
+    windowStart = Math.max(0, windowEnd - MAX_PAGE_BUTTONS);
+
+    for (let i = windowStart; i < windowEnd; i++) {
       const btn = document.createElement('button');
       btn.textContent = i + 1;
       btn.className = i === currentPage ? 'active' : '';
