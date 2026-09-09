@@ -583,7 +583,7 @@ const DetailView = (() => {
     });
 
     if (!validation.valid) {
-      alert('Error en formulario:\n' + validation.errors.join('\n'));
+      Toast.error(validation.errors.join('\n'));
       return;
     }
 
@@ -597,7 +597,7 @@ const DetailView = (() => {
     });
 
     document.getElementById('wishlist-modal').classList.remove('active');
-    alert('✅ Agregado a lista de deseos');
+    Toast.success('Agregado a lista de deseos');
   };
 
   const showError = (message) => {

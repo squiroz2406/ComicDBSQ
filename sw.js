@@ -21,6 +21,7 @@ const RECURSOS_SHELL = [
   './js/security.js',
   './js/api.js',
   './js/storage.js',
+  './js/toast.js',
   './js/router.js',
   './js/app.js',
   './js/pwa-init.js',
