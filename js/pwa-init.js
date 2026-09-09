@@ -41,15 +41,45 @@
     console.warn('[PWA] Este navegador no soporta Service Workers. La app funcionará como web app convencional.');
   }
 
+  const installBtn = document.getElementById('install-app-btn');
+
   window.addEventListener('beforeinstallprompt', event => {
     event.preventDefault();
     window._pwaInstallPrompt = event;
     console.log('[PWA] La aplicación puede ser instalada.');
+
+    if (installBtn) {
+      installBtn.hidden = false;
+    }
   });
+
+  if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+      const promptEvent = window._pwaInstallPrompt;
+      if (!promptEvent) return;
+
+      installBtn.hidden = true;
+      promptEvent.prompt();
+
+      const { outcome } = await promptEvent.userChoice;
+      console.log('[PWA] Resultado de la instalación:', outcome);
+      window._pwaInstallPrompt = null;
+
+      if (outcome === 'dismissed' && window.Toast) {
+        Toast.info('Instalación cancelada');
+      }
+    });
+  }
 
   window.addEventListener('appinstalled', () => {
     console.log('[PWA] ¡Aplicación instalada correctamente!');
     window._pwaInstallPrompt = null;
+    if (installBtn) {
+      installBtn.hidden = true;
+    }
+    if (window.Toast) {
+      Toast.success('✅ ComicDBSQ instalado correctamente');
+    }
   });
 
 })();

@@ -34,17 +34,48 @@
               <img src="css/img/logo-navbar.png" alt="ComicsDBSQ" class="logo-img">
             </a>
             <ul class="nav-menu">
-              <li><a href="#/" class="nav-link">Inicio</a></li>
-              <li><a href="#/search" class="nav-link">Búsqueda</a></li>
-              <li><a href="#/wishlist" class="nav-link">Lista de deseos</a></li>
-              <li><a href="#/history" class="nav-link">Historial</a></li>
-              <li><a href="#/contact" class="nav-link">Contacto</a></li>
+              <li>
+                <a href="#/" class="nav-link">
+                  <svg class="nav-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8" /><path d="M5 10v10h14V10" /></svg>
+                  <span class="nav-link-text">Inicio</span>
+                </a>
+              </li>
+              <li>
+                <a href="#/search" class="nav-link">
+                  <svg class="nav-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
+                  <span class="nav-link-text">Búsqueda</span>
+                </a>
+              </li>
+              <li>
+                <a href="#/wishlist" class="nav-link">
+                  <svg class="nav-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5 5 0 0 0-7.1 0L12 6.3l-1.7-1.7a5 5 0 0 0-7.1 7.1L12 21l8.8-9.3a5 5 0 0 0 0-7.1z" /></svg>
+                  <span class="nav-link-text">Lista de deseos</span>
+                </a>
+              </li>
+              <li>
+                <a href="#/history" class="nav-link">
+                  <svg class="nav-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></svg>
+                  <span class="nav-link-text">Historial</span>
+                </a>
+              </li>
+              <li>
+                <a href="#/contact" class="nav-link">
+                  <svg class="nav-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></svg>
+                  <span class="nav-link-text">Contacto</span>
+                </a>
+              </li>
             </ul>
-            <button class="menu-toggle" aria-label="Alternar menú">
-              <span></span>
-              <span></span>
-              <span></span>
-            </button>
+            <div class="nav-actions">
+              <button id="install-app-btn" class="btn-install" type="button" hidden>
+                <svg class="btn-install-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12" /><path d="M7 10l5 5 5-5" /><path d="M4 19h16" /></svg>
+                <span class="btn-install-text">Instalar app</span>
+              </button>
+              <button class="menu-toggle" aria-label="Alternar menú">
+                <span></span>
+                <span></span>
+                <span></span>
+              </button>
+            </div>
           </div>
         </nav>
       </header>
