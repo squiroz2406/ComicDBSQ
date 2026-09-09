@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- ════════════════════════════════════════════════════════
+       METADATOS DE LA APLICACIÓN
+       Editá el título y la descripción con los datos de tu app
+       ════════════════════════════════════════════════════════ -->
+  <title>Nombre de tu aplicación</title>
+  <meta name="description" content="Descripción breve de tu aplicación">
+  <meta name="author" content="Nombre del grupo">
+
+  <!-- ════════════════════════════════════════════════════════
+       PWA: MANIFEST Y TEMA
+       Editá theme-color con el color principal de tu app
+       ════════════════════════════════════════════════════════ -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#000000">
+
+  <!-- iOS: soporte para instalación desde Safari -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="NombreCorto">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+
+  <!-- ════════════════════════════════════════════════════════
+       ESTILOS
+       Agregá tus hojas de estilo adicionales debajo de esta línea
+       ════════════════════════════════════════════════════════ -->
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+  <!-- ════════════════════════════════════════════════════════
+       CONTENIDO DE TU APLICACIÓN
+       Reemplazá todo el contenido de este <body> con el HTML
+       de tu aplicación. Mantené el bloque de scripts al final.
+       ════════════════════════════════════════════════════════ -->
+
+  <header>
+    <h1>Mi aplicación</h1>
+    <nav>
+      <a href="/">Inicio</a>
+      <a href="/busqueda.html">Búsqueda</a>
+      <a href="/lista-deseos.html">Lista de deseos</a>
+      <a href="/historial.html">Historial</a>
+      <a href="/contacto.html">Contacto</a>
+    </nav>
+  </header>
+
+  <main>
+    <p>Reemplazá este contenido con tu aplicación.</p>
+  </main>
+
+  <footer>
+    <p>Aplicaciones Móviles · 2025-2026</p>
+  </footer>
+
+  <!-- ════════════════════════════════════════════════════════
+       SCRIPTS
+       Agregá tus scripts adicionales antes de pwa-init.js
+       ════════════════════════════════════════════════════════ -->
+  <script src="/js/app.js"></script>
+
+  <!-- Inicialización PWA: NO modificar este script -->
+  <script src="/js/pwa-init.js"></script>
+
+</body>
+</html>

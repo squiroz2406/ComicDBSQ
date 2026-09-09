@@ -1,7 +1,7 @@
 // Script de testing para validar que la API funciona
 // Ejecuta esto en la consola del navegador (F12 > Console)
 
-console.log('🧪 Iniciando tests de ComicDB API...\n');
+console.log('🧪 Iniciando tests de ComicDBSQ API...\n');
 
 // Test 1: Verificar configuración
 console.log('1️⃣ Verificando configuración...');

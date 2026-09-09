@@ -1,4 +1,4 @@
-// Configuración de ComicDB
+// Configuración de ComicDBSQ
 // Nota: La API Key no se expone al cliente por seguridad
 // Se maneja en el servidor Node.js
 
@@ -7,11 +7,11 @@ let CONFIG = {
   PROXY_ENDPOINT: '/api/proxy',
   CONFIG_ENDPOINT: '/api/config',
   STORAGE_KEYS: {
-    WISHLIST: 'comicdb_wishlist',
-    HISTORY: 'comicdb_history',
+    WISHLIST: 'comicdbsq_wishlist',
+    HISTORY: 'comicdbsq_history',
   },
   // Valores por defecto (se sobrescriben desde servidor)
-  RESULTS_PER_PAGE: 10,
+  RESULTS_PER_PAGE: 12,
   MAP_CENTER: [-34.9215, -57.9536],
   MAP_ZOOM: 15,
 };

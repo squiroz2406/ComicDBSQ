@@ -550,6 +550,10 @@ const DetailView = (() => {
     `;
 
     document.body.appendChild(modal);
+    // Al crearlo por primera vez hay que abrirlo ya mismo: si no, el
+    // primer click en "Agregar a lista de deseos" no mostraba nada (el
+    // modal quedaba armado pero oculto hasta un segundo click).
+    modal.classList.add('active');
 
     const form = modal.querySelector('form');
     form.addEventListener('submit', (e) => {
@@ -579,7 +583,7 @@ const DetailView = (() => {
     });
 
     if (!validation.valid) {
-      alert('Error en formulario:\n' + validation.errors.join('\n'));
+      Toast.error(validation.errors.join('\n'));
       return;
     }
 
@@ -593,7 +597,7 @@ const DetailView = (() => {
     });
 
     document.getElementById('wishlist-modal').classList.remove('active');
-    alert('✅ Agregado a lista de deseos');
+    Toast.success('Agregado a lista de deseos');
   };
 
   const showError = (message) => {

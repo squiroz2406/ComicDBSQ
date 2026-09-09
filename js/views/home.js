@@ -45,8 +45,15 @@ const HomeView = (() => {
         loadingDiv.remove();
       }
 
-      if (data && data.results && Array.isArray(data.results) && data.results.length > 0) {
-        const comics = data.results.slice(0, 6);
+      // Excluir tipos de recurso fuera del alcance de la app (ej: "series"
+      // de TV) que no tienen una página de detalle correcta a la que navegar.
+      const KNOWN_RESOURCE_TYPES = ['issue', 'volume', 'character', 'person', 'team', 'story_arc'];
+      const supportedResults = (data?.results || []).filter(
+        item => !item.resource_type || KNOWN_RESOURCE_TYPES.includes(item.resource_type)
+      );
+
+      if (supportedResults.length > 0) {
+        const comics = supportedResults.slice(0, 6);
         featuredGrid.innerHTML = comics.map(comic => {
           const rawImageUrl = comic.image?.small_url || comic.image?.medium_url || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 150 150%22%3E%3Crect fill=%22%23333%22 width=%22150%22 height=%22150%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2216%22 fill=%22%23999%22 text-anchor=%22middle%22 dominant-baseline=%22central%22%3ENo Image%3C/text%3E%3C/svg%3E';
           const imageUrl = getProxiedImageUrl(rawImageUrl);
@@ -67,7 +74,6 @@ const HomeView = (() => {
           // completo (prefijo-id) en api_detail_url como respaldo. Navegar
           // siempre como 'issue' llevaba a un detalle equivocado cuando el
           // resultado destacado no era un cómic (ver también search.js).
-          const knownResourceTypes = ['issue', 'volume', 'character', 'person', 'team', 'story_arc'];
           let itemType = 'issue';
           let fullId = `4000-${comic.id}`;
 
@@ -78,7 +84,7 @@ const HomeView = (() => {
             if (idSegment && idSegment.includes('-')) {
               fullId = idSegment;
 
-              if (knownResourceTypes.includes(comic.resource_type)) {
+              if (KNOWN_RESOURCE_TYPES.includes(comic.resource_type)) {
                 itemType = comic.resource_type;
               } else {
                 const prefix = idSegment.split('-')[0];

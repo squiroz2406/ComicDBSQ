@@ -5,9 +5,42 @@ const SearchView = (() => {
   // del lado del cliente en vez de pedir una "página" nueva por cada click.
   const SEARCH_BATCH_SIZE = 100;
 
+  // Tipos de recurso que la app sabe mostrar (tienen detalle propio en
+  // detail.js). Con el filtro "Todos" la búsqueda puede devolver otros
+  // tipos fuera del alcance de un catálogo de cómics (ej: "series" de TV,
+  // "concept", "location"...) que no tienen a dónde navegar correctamente.
+  const KNOWN_RESOURCE_TYPES = ['issue', 'volume', 'character', 'person', 'team', 'story_arc'];
+
   let currentPage = 0;
   let currentFilters = {};
   let currentResults = { results: [] };
+
+  // Ordena el lote de resultados en el cliente (ver comentario sobre el
+  // parámetro "sort" ignorado por /search/). Soporta "name" y "date_added"
+  // en ambas direcciones, que son las opciones del select de la UI.
+  // sortValue === '' (Relevancia, la opción por defecto) no reordena nada:
+  // deja el orden por relevancia que ya devuelve la API, igual que se veía
+  // antes de que "Ordenar por" funcionara.
+  const sortResults = (results, sortValue) => {
+    if (!sortValue) return results;
+
+    const [field, direction] = sortValue.split(':');
+    const dir = direction === 'asc' ? 1 : -1;
+
+    return [...results].sort((a, b) => {
+      if (field === 'name') {
+        const nameA = (a.name || a.title || '').toLowerCase();
+        const nameB = (b.name || b.title || '').toLowerCase();
+        return nameA.localeCompare(nameB) * dir;
+      }
+      if (field === 'date_added') {
+        const dateA = new Date(a.date_added || 0).getTime();
+        const dateB = new Date(b.date_added || 0).getTime();
+        return (dateA - dateB) * dir;
+      }
+      return 0;
+    });
+  };
 
   // Procesar URL de imagen para aplicar proxy si es de Comic Vine
   const getProxiedImageUrl = (imageUrl) => {
@@ -59,15 +92,19 @@ const SearchView = (() => {
         <div class="filter-group">
           <label for="search-type">Tipo de búsqueda</label>
           <select id="search-type">
+            <option value="">Todos</option>
             <option value="issue">Cómics (Issues)</option>
             <option value="volume">Volúmenes</option>
             <option value="character">Personajes</option>
+            <option value="team">Equipos</option>
+            <option value="person">Personas (creadores)</option>
           </select>
         </div>
 
         <div class="filter-group">
           <label for="search-sort">Ordenar por</label>
           <select id="search-sort">
+            <option value="">Relevancia</option>
             <option value="date_added:desc">Más recientes</option>
             <option value="date_added:asc">Más antiguos</option>
             <option value="name:asc">Nombre (A-Z)</option>
@@ -82,7 +119,6 @@ const SearchView = (() => {
       </div>
 
       <div class="results-section">
-        <div id="results-info" class="results-info"></div>
         <div id="comics-grid" class="comics-grid"></div>
         <div id="pagination" class="pagination"></div>
       </div>
@@ -96,8 +132,11 @@ const SearchView = (() => {
     if (loadSearchState()) {
       // Si hay un estado guardado, mostrar los resultados
       document.getElementById('search-query').value = currentFilters.query || '';
-      document.getElementById('search-type').value = currentFilters.type || 'issue';
-      document.getElementById('search-sort').value = currentFilters.sort || 'date_added:desc';
+      // "type" puede ser '' (Todos) legítimamente: no usar || acá, pisaría
+      // ese valor guardado.
+      document.getElementById('search-type').value = currentFilters.type ?? '';
+      // Mismo criterio que "type": '' (Relevancia) es un valor legítimo.
+      document.getElementById('search-sort').value = currentFilters.sort ?? '';
       displayResults();
     } else {
       // Si no hay estado guardado, hacer búsqueda vacía
@@ -117,8 +156,8 @@ const SearchView = (() => {
 
     clearBtn.addEventListener('click', () => {
       document.getElementById('search-query').value = '';
-      document.getElementById('search-type').value = 'issue';
-      document.getElementById('search-sort').value = 'date_added:desc';
+      document.getElementById('search-type').value = '';
+      document.getElementById('search-sort').value = '';
       currentPage = 0;
       currentFilters = {};
       currentResults = { results: [] };
@@ -166,6 +205,7 @@ const SearchView = (() => {
         query,
         offset: 0,
         limit: SEARCH_BATCH_SIZE,
+        resources: type,
       });
 
       console.log('Search results received');
@@ -174,7 +214,10 @@ const SearchView = (() => {
         throw new Error(data.error);
       }
 
-      currentResults = data;
+      // El endpoint /search/ de Comic Vine ignora el parámetro "sort"
+      // (siempre devuelve por relevancia, verificado contra la API real),
+      // así que el orden se resuelve acá, sobre el lote ya descargado.
+      currentResults = { ...data, results: sortResults(data.results || [], sort) };
       displayResults();
       saveSearchState(); // Guardar estado después de búsqueda exitosa
     } catch (error) {
@@ -185,7 +228,6 @@ const SearchView = (() => {
 
   const displayResults = () => {
     const grid = document.getElementById('comics-grid');
-    const infoDiv = document.getElementById('results-info');
     const paginationDiv = document.getElementById('pagination');
 
     grid.innerHTML = '';
@@ -193,27 +235,29 @@ const SearchView = (() => {
 
     if (!currentResults.results || currentResults.results.length === 0) {
       grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-muted);">No se encontraron resultados</div>';
-      infoDiv.innerHTML = '';
       return;
     }
 
     // currentResults.results contiene el lote completo ya traído (hasta
-    // SEARCH_BATCH_SIZE). La página a mostrar se recorta acá, en el cliente.
-    const allResults = currentResults.results;
+    // SEARCH_BATCH_SIZE). Hay que filtrar los inválidos ANTES de paginar:
+    // si se recorta primero una página fija de 12 y se filtra después,
+    // una página puede quedar con menos ítems de los que corresponde
+    // aunque el lote tenga de sobra para completarla.
+    //
+    // Se descartan ítems sin nombre, y tipos de recurso fuera del alcance
+    // de la app (ver KNOWN_RESOURCE_TYPES: con el filtro "Todos" Comic
+    // Vine puede devolver cosas como "series" de TV, sin detalle propio
+    // al que navegar). La falta de descripción/bio/alias YA NO descarta
+    // el ítem: se muestra con el fallback "Sin descripción disponible".
+    const allResults = (currentResults.results || []).filter(item => {
+      const hasName = item.name || item.title;
+      const isSupportedType = !item.resource_type || KNOWN_RESOURCE_TYPES.includes(item.resource_type);
+      return hasName && isSupportedType;
+    });
     const navigableTotal = allResults.length;
-    const reportedTotal = currentResults.number_of_total_results || navigableTotal;
 
     const pageStart = currentPage * CONFIG.RESULTS_PER_PAGE;
-    const results = allResults.slice(pageStart, pageStart + CONFIG.RESULTS_PER_PAGE);
-
-    infoDiv.innerHTML = `<span class="results-count">Mostrando ${pageStart + 1}-${Math.min(pageStart + CONFIG.RESULTS_PER_PAGE, navigableTotal)} de ${reportedTotal} resultados</span>`;
-
-    // Filtrar resultados inválidos (sin nombre ni descripción)
-    const validResults = results.filter(item => {
-      const hasName = item.name || item.title;
-      const hasContent = item.description || item.bio || item.aliases;
-      return hasName && hasContent;
-    });
+    const validResults = allResults.slice(pageStart, pageStart + CONFIG.RESULTS_PER_PAGE);
 
     validResults.forEach(item => {
       const card = document.createElement('div');
@@ -226,7 +270,6 @@ const SearchView = (() => {
       // respaldo para cuando no venga ese campo.
       let itemType = 'issue';
       let fullId = `4000-${item.id}`; // Formato por defecto
-      const knownResourceTypes = ['issue', 'volume', 'character', 'person', 'team', 'story_arc'];
 
       if (item.api_detail_url) {
         // URL es como: https://comicvine.gamespot.com/api/volume/4050-3173/
@@ -237,7 +280,7 @@ const SearchView = (() => {
         if (idSegment && idSegment.includes('-')) {
           fullId = idSegment; // Usar el ID completo del api_detail_url
 
-          if (knownResourceTypes.includes(item.resource_type)) {
+          if (KNOWN_RESOURCE_TYPES.includes(item.resource_type)) {
             itemType = item.resource_type;
           } else {
             const prefix = idSegment.split('-')[0];
@@ -356,7 +399,16 @@ const SearchView = (() => {
     };
     container.appendChild(prevBtn);
 
-    for (let i = 0; i < Math.min(totalPages, 5); i++) {
+    // Ventana deslizante de hasta 5 botones numerados, centrada en la
+    // página actual, para poder llegar a cualquier página (antes siempre
+    // mostraba fijo 1-5 sin importar en qué página se estuviera).
+    const MAX_PAGE_BUTTONS = 5;
+    const half = Math.floor(MAX_PAGE_BUTTONS / 2);
+    let windowStart = Math.max(0, currentPage - half);
+    const windowEnd = Math.min(totalPages, windowStart + MAX_PAGE_BUTTONS);
+    windowStart = Math.max(0, windowEnd - MAX_PAGE_BUTTONS);
+
+    for (let i = windowStart; i < windowEnd; i++) {
       const btn = document.createElement('button');
       btn.textContent = i + 1;
       btn.className = i === currentPage ? 'active' : '';
