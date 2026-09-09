@@ -13,14 +13,14 @@ const ContactView = (() => {
       <h1 style="margin-bottom: 2rem;">Contacto</h1>
 
       <div class="contact-info">
-        <h2>ComicDB Studios</h2>
-        <p><strong>Email:</strong> info@comicdb.com</p>
+        <h2>ComicDBSQ Studios</h2>
+        <p><strong>Email:</strong> info@comicdbsq.com</p>
         <p><strong>Teléfono:</strong> +54 221 XXX-XXXX</p>
         <p><strong>Ubicación:</strong> Catedral de La Plata, La Plata, Buenos Aires, Argentina</p>
         <p><strong>Coordenadas:</strong> ${lat.toFixed(4)}, ${lng.toFixed(4)}</p>
 
         <p style="margin-top: 1.5rem; font-size: 0.95rem; color: var(--text-muted);">
-          ComicDB es una aplicación de código abierto desarrollada como proyecto educativo para la asignatura
+          ComicDBSQ es una aplicación de código abierto desarrollada como proyecto educativo para la asignatura
           de Aplicaciones Móviles. Nos especializamos en brindar soluciones de software personalizadas para
           clientes con necesidades específicas.
         </p>

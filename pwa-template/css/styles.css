@@ -1,0 +1,33 @@
+/* ============================================================
+   STYLES.CSS — Tus estilos van aquí
+   ============================================================
+   Implementá tu diseño mobile-first en este archivo.
+   Recordá usar media queries para adaptar el layout a
+   tablet y desktop según los requisitos del TP.
+   ============================================================ */
+
+/* Reset básico */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Estilos base (mobile-first) */
+body {
+  font-family: sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #333;
+  background-color: #fff;
+}
+
+/* ── TABLET (576px y más) ─────────────────────────── */
+@media (min-width: 576px) {
+  /* Tus estilos para tablet */
+}
+
+/* ── DESKTOP (992px y más) ───────────────────────── */
+@media (min-width: 992px) {
+  /* Tus estilos para desktop */
+}

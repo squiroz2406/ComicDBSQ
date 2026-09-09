@@ -108,7 +108,7 @@ const server = http.createServer((req, res) => {
   if (req.url === '/api/config') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
-      appName: ENV.APP_NAME || 'ComicDB',
+      appName: ENV.APP_NAME || 'ComicDBSQ',
       appVersion: ENV.APP_VERSION || '1.0.0',
       resultsPerPage: parseInt(ENV.RESULTS_PER_PAGE) || 12,
       mapCenter: [
@@ -228,7 +228,7 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`✅ Servidor ComicDB ejecutándose en http://localhost:${PORT}`);
-  console.log(`📱 Abre tu navegador en http://localhost:${PORT}`);
-  console.log(`🛑 Presiona Ctrl+C para detener el servidor`);
+  console.log(`Servidor ComicDBSQ ejecutándose en http://localhost:${PORT}`);
+  console.log(`Abre tu navegador en http://localhost:${PORT}`);
+  console.log(`Presiona Ctrl+C para detener el servidor`);
 });

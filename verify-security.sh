@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🔒 Verificación de Seguridad - ComicDB"
+echo "🔒 Verificación de Seguridad - ComicDBSQ"
 echo "======================================"
 echo ""
 
