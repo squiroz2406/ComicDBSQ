@@ -4,7 +4,7 @@
 // para el shell estático + Network Only para la API).
 // ============================================================
 
-const CACHE_NAME = 'comicdbsq-shell-v3';
+const CACHE_NAME = 'comicdbsq-shell-v5';
 
 // Recursos estáticos del shell. Las rutas son relativas al
 // propio sw.js: así funcionan tanto en local (raíz del proyecto)
@@ -22,6 +22,7 @@ const RECURSOS_SHELL = [
   './js/api.js',
   './js/storage.js',
   './js/toast.js',
+  './js/connection-status.js',
   './js/router.js',
   './js/app.js',
   './js/pwa-init.js',
