@@ -157,8 +157,8 @@ No hay dependencias de npm que instalar (el servidor usa solo módulos nativos d
 # 1. Cloná el repo y entrá a la carpeta
 cd ComicDBSQ
 
-# 2. Copiá el archivo de variables de entorno y completá tu API key de Comic Vine
-cp .env.example .env
+# 2. Conservá el archivo .env incluido en el repositorio
+#    (ya contiene la configuración necesaria para ejecutar la aplicación)
 
 # 3. Corré el servidor
 node server.js
@@ -167,4 +167,4 @@ node server.js
 http://localhost:8000   # o el puerto que hayas puesto en SERVER_PORT
 ```
 
-La API key se obtiene gratis registrándose en [comicvine.gamespot.com/api](https://comicvine.gamespot.com/api/).
+El repositorio mantiene el archivo `.env` con la configuración necesaria para la ejecución, por lo que el docente no necesita solicitar ni configurar una API key propia. No reemplaces `.env` por `.env.example` al poner en marcha el proyecto.
