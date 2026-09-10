@@ -974,6 +974,52 @@ footer {
   }
 }
 
+/* CONNECTION STATUS */
+.connection-banner {
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--secondary-color);
+  border: 2px solid var(--accent-color);
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+  color: var(--text-color);
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  max-width: calc(100% - 2rem);
+  transform: translateX(-50%) translateY(-20px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.connection-banner-show {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+.connection-banner-offline {
+  border-color: var(--error-color);
+}
+
+.connection-banner-online {
+  border-color: var(--success-color);
+}
+
+@media (max-width: 480px) {
+  .connection-banner {
+    max-width: calc(100% - 2rem);
+    padding: 0.65rem 1.1rem;
+    font-size: 0.85rem;
+  }
+}
+
 /* ERROR */
 .error-container {
   background-color: rgba(231, 76, 60, 0.1);

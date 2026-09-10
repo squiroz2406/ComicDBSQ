@@ -147,15 +147,20 @@ const server = http.createServer((req, res) => {
       }
     };
 
-    https.get(apiUrl, options, (apiRes) => {
+    // 'settled' evita responder dos veces (p.ej. si el timeout dispara
+    // req.destroy() y eso a su vez genera un 'error' tardío sobre la
+    // misma request).
+    let settled = false;
+
+    const proxyReq = https.get(apiUrl, options, (apiRes) => {
       let data = '';
-      let isJson = false;
 
       apiRes.on('data', (chunk) => {
         data += chunk;
       });
 
       apiRes.on('end', () => {
+        settled = true;
         console.log('Response status:', apiRes.statusCode);
         console.log('Response length:', data.length);
         console.log('Response preview:', data.substring(0, 300));
@@ -187,20 +192,52 @@ const server = http.createServer((req, res) => {
           }));
         }
       });
-    }).on('error', (err) => {
-      console.error('Proxy error:', err.message);
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({
-        error: 'Proxy request failed',
-        message: err.message
-      }));
-    }).on('timeout', () => {
+    });
+
+    proxyReq.on('error', (err) => {
+      if (settled) return;
+      settled = true;
+
+      // err.message puede venir vacío: desde Node 18+, https intenta
+      // conectar por IPv4 e IPv6 en paralelo (Happy Eyeballs) y si ambos
+      // fallan a la vez (p.ej. se cae la conexión a internet) lanza un
+      // AggregateError cuyo mensaje de nivel superior queda vacío; el
+      // detalle real está en err.errors.
+      console.error(
+        'Proxy error:',
+        err.name + (err.code ? ` (${err.code})` : ''),
+        '-',
+        err.message || '(sin mensaje)'
+      );
+      if (Array.isArray(err.errors)) {
+        err.errors.forEach((subErr, i) => {
+          console.error(`  causa ${i + 1}:`, subErr.code || subErr.name, subErr.message);
+        });
+      }
+
+      if (!res.headersSent) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          error: 'Proxy request failed',
+          message: err.message || err.code || 'Error de conexión desconocido'
+        }));
+      }
+    });
+
+    proxyReq.on('timeout', () => {
+      if (settled) return;
+      settled = true;
+
       console.error('Proxy timeout');
       res.writeHead(504, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         error: 'Request timeout',
         message: 'La petición tardó demasiado'
       }));
+
+      // Sin destroy() el socket queda vivo esperando una respuesta que
+      // ya no le importa a nadie, y puede disparar un 'error' más tarde.
+      proxyReq.destroy();
     });
 
     return;
