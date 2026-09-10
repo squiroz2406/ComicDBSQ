@@ -16,13 +16,14 @@ const Toast = (() => {
     return container;
   };
 
-  const show = (message, type = 'success', duration = 3500) => {
+  const show = (message, type = 'success', { duration = 3500, icon } = {}) => {
     const container = getContainer();
+    const resolvedIcon = icon === undefined ? (ICONS[type] || ICONS.info) : icon;
 
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
     toast.innerHTML = `
-      <span class="toast-icon">${ICONS[type] || ICONS.info}</span>
+      ${resolvedIcon ? `<span class="toast-icon">${resolvedIcon}</span>` : ''}
       <span class="toast-message"></span>
       <button class="toast-close" aria-label="Cerrar">&times;</button>
     `;
@@ -45,8 +46,8 @@ const Toast = (() => {
 
   return {
     show,
-    success: (message, duration) => show(message, 'success', duration),
-    error: (message, duration) => show(message, 'error', duration),
-    info: (message, duration) => show(message, 'info', duration),
+    success: (message, options) => show(message, 'success', options),
+    error: (message, options) => show(message, 'error', options),
+    info: (message, options) => show(message, 'info', options),
   };
 })();

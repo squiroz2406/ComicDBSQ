@@ -18,6 +18,38 @@ const API = (() => {
     return proxyUrl.toString();
   };
 
+  // El proxy responde 500/504 ante fallos transitorios de red hacia Comic
+  // Vine (reset de socket, hipo de TLS, Happy Eyeballs). Los errores "de
+  // negocio" de la API llegan como 200, así que reintentar solo ante 5xx o
+  // error de conexión es seguro y suele resolverse al segundo intento.
+  const RETRY_STATUS = new Set([500, 502, 503, 504]);
+
+  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  const fetchWithRetry = async (url, { retries = 2, backoff = 400 } = {}) => {
+    let lastError;
+
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      if (attempt > 0) {
+        await wait(backoff * attempt);
+      }
+
+      try {
+        const response = await fetch(url);
+        if (RETRY_STATUS.has(response.status) && attempt < retries) {
+          console.warn(`Reintentando (${attempt + 1}/${retries}) tras HTTP ${response.status}`);
+          continue;
+        }
+        return response;
+      } catch (err) {
+        lastError = err;
+        console.warn(`Reintentando (${attempt + 1}/${retries}) tras error de red: ${err.message}`);
+      }
+    }
+
+    throw lastError || new Error('No se pudo completar la petición');
+  };
+
   const handleResponse = async (response) => {
     console.log('Response status:', response.status, response.statusText);
 
@@ -54,17 +86,13 @@ const API = (() => {
           // Restringe el/los tipo(s) de recurso que devuelve la búsqueda
           // global (issue, volume, character, team, person...).
           resources: filters.resources || '',
-          // El endpoint /search/ ignora este parámetro (verificado contra la
-          // API real: el orden no cambia sin importar el valor). El orden
-          // que elige el usuario se aplica del lado del cliente en
-          // search.js, sobre el lote ya descargado.
           sort: 'date_added:desc',
           limit: filters.limit || CONFIG.RESULTS_PER_PAGE,
           offset: filters.offset || 0,
         };
 
         const url = buildUrl('/search/', params);
-        const response = await fetch(url);
+        const response = await fetchWithRetry(url);
         const data = await handleResponse(response);
 
         return data;
@@ -77,7 +105,7 @@ const API = (() => {
     getComicDetail: async (id) => {
       try {
         const url = buildUrl(`/issue/4000-${id}/`);
-        const response = await fetch(url);
+        const response = await fetchWithRetry(url);
         const data = await handleResponse(response);
 
         // API devuelve en "results" para endpoints individuales
@@ -98,7 +126,7 @@ const API = (() => {
         };
 
         const url = buildUrl('/search/', params);
-        const response = await fetch(url);
+        const response = await fetchWithRetry(url);
         const data = await handleResponse(response);
 
         return data;
@@ -111,7 +139,7 @@ const API = (() => {
     getStoryArcDetail: async (id) => {
       try {
         const url = buildUrl(`/story_arc/4045-${id}/`);
-        const response = await fetch(url);
+        const response = await fetchWithRetry(url);
         const data = await handleResponse(response);
 
         // API devuelve en "results" para endpoints individuales
@@ -125,7 +153,7 @@ const API = (() => {
     getCharacterDetail: async (id) => {
       try {
         const url = buildUrl(`/character/4005-${id}/`);
-        const response = await fetch(url);
+        const response = await fetchWithRetry(url);
         const data = await handleResponse(response);
 
         // La API devuelve la información directamente en "results"
@@ -139,7 +167,7 @@ const API = (() => {
     getTeamDetail: async (id) => {
       try {
         const url = buildUrl(`/team/4060-${id}/`);
-        const response = await fetch(url);
+        const response = await fetchWithRetry(url);
         const data = await handleResponse(response);
 
         // API devuelve en "results" para endpoints individuales
@@ -153,7 +181,7 @@ const API = (() => {
     getPersonDetail: async (id) => {
       try {
         const url = buildUrl(`/person/4040-${id}/`);
-        const response = await fetch(url);
+        const response = await fetchWithRetry(url);
         const data = await handleResponse(response);
 
         // API devuelve en "results" para endpoints individuales
@@ -174,7 +202,7 @@ const API = (() => {
         };
 
         const url = buildUrl('/search/', params);
-        const response = await fetch(url);
+        const response = await fetchWithRetry(url);
         const data = await handleResponse(response);
 
         return data;
@@ -187,7 +215,7 @@ const API = (() => {
     getVolumeDetail: async (id) => {
       try {
         const url = buildUrl(`/volume/4050-${id}/`);
-        const response = await fetch(url);
+        const response = await fetchWithRetry(url);
         const data = await handleResponse(response);
 
         // API devuelve en "results" para endpoints individuales
@@ -207,7 +235,7 @@ const API = (() => {
         };
 
         const url = buildUrl('/issues/', params);
-        const response = await fetch(url);
+        const response = await fetchWithRetry(url);
         const data = await handleResponse(response);
 
         return data;
@@ -217,20 +245,64 @@ const API = (() => {
       }
     },
 
+    // Franquicias/series reconocibles para la sección "Cómics destacados".
+    // Buscar 'a' con offset aleatorio traía basura (títulos "A", "The", "&"),
+    // así que se rota entre títulos conocidos y se restringe a volúmenes.
+    FEATURED_QUERIES: [
+      'Batman', 'Superman', 'The Amazing Spider-Man', 'X-Men', 'Wonder Woman',
+      'The Avengers', 'Justice League', 'Watchmen', 'The Sandman', 'Saga',
+      'Hellboy', 'Daredevil', 'Invincible', 'Sin City', 'Y: The Last Man',
+      'V for Vendetta', 'Preacher', 'Fantastic Four', 'Green Lantern', 'The Flash',
+      'Captain America', 'Black Panther', 'Thor', 'Iron Man', 'Deadpool',
+    ],
+
     getRandomComics: async () => {
       try {
-        const params = {
-          query: 'a',
-          limit: 6,
-          offset: Math.floor(Math.random() * 500),
-        };
+        // Una sola búsqueda ("Saga") devolvía muchas ediciones del mismo
+        // volumen (traducciones, publicaciones extranjeras, recopilatorios).
+        // Se lanza una búsqueda por cada franquicia distinta y se toma un
+        // único volumen de cada una.
+        const queries = API.FEATURED_QUERIES
+          .slice()
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 6);
 
-        const url = buildUrl('/search/', params);
-        console.log('Fetching random comics from:', url);
-        const response = await fetch(url);
-        const data = await handleResponse(response);
+        const searches = await Promise.allSettled(
+          queries.map((query) => {
+            const url = buildUrl('/search/', { query, resources: 'volume', limit: 8 });
+            return fetchWithRetry(url).then(handleResponse);
+          })
+        );
 
-        return data;
+        const seen = new Set();
+        const results = [];
+
+        for (const outcome of searches) {
+          if (outcome.status !== 'fulfilled') {
+            continue;
+          }
+
+          const candidates = (outcome.value?.results || []).filter((item) => {
+            const key = (item.name || item.title || '').trim().toLowerCase();
+            return key && !seen.has(key);
+          });
+
+          if (!candidates.length) {
+            continue;
+          }
+
+          // Preferir la edición principal (la que más números publicó) por
+          // encima de traducciones o recopilatorios sueltos.
+          candidates.sort(
+            (a, b) => (b.count_of_issues || 0) - (a.count_of_issues || 0)
+          );
+
+          const pick = candidates[0];
+          seen.add((pick.name || pick.title || '').trim().toLowerCase());
+          results.push(pick);
+        }
+
+        return { results };
       } catch (error) {
         console.error('Error fetching random comics:', error);
         return { results: [] };

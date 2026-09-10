@@ -597,7 +597,7 @@ const DetailView = (() => {
     });
 
     document.getElementById('wishlist-modal').classList.remove('active');
-    Toast.success('Agregado a lista de deseos');
+    Toast.success('Agregado a lista de deseos', { icon: '' });
   };
 
   const showError = (message) => {

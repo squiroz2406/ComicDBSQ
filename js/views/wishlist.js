@@ -12,7 +12,6 @@ const WishlistView = (() => {
       view.innerHTML = `
         <div class="list-empty">
           <p>Tu lista de deseos está vacía</p>
-          <p style="font-size: 2rem;">💔</p>
           <a href="#/search" class="btn btn-primary">Comenzar a agregar</a>
         </div>
       `;

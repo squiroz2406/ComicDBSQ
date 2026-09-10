@@ -12,7 +12,6 @@ const HistoryView = (() => {
       view.innerHTML = `
         <div class="list-empty">
           <p>Tu historial está vacío</p>
-          <p style="font-size: 2rem;">📚</p>
           <a href="#/search" class="btn btn-primary">Comenzar a explorar</a>
         </div>
       `;
